@@ -35,8 +35,9 @@ newpgtype(:text, 25, ())
 newpgtype(:numeric, 1700, (BigInt,BigFloat))
 newpgtype(:date, 1082, ())
 newpgtype(:unknown, 705, (UnionType,NAtype))
-
 newpgtype(:json, 114, (Dict{String,Any},))
+newpgtype(:jsonb, 3802, (Dict{String,Any},))
+
 
 typealias PGStringTypes Union(Type{PostgresType{:bpchar}},
                               Type{PostgresType{:varchar}},
@@ -84,6 +85,8 @@ jldata(::Type{PostgresType{:bytea}}, ptr::Ptr{Uint8}) = bytestring(ptr) |> decod
 jldata(::Type{PostgresType{:unknown}}, ptr::Ptr{Uint8}) = None
 
 jldata(::Type{PostgresType{:json}}, ptr::Ptr{Uint8}) = JSON.parse(bytestring(ptr))
+
+jldata(::Type{PostgresType{:jsonb}}, ptr::Ptr{Uint8}) = JSON.parse(bytestring(ptr))
 
 function pgdata(::Type{PostgresType{:bool}}, ptr::Ptr{Uint8}, data::Bool)
     ptr = data ? storestring!(ptr, "TRUE") : storestring!(ptr, "FALSE")
@@ -135,6 +138,10 @@ function pgdata(::Type{PostgresType{:unknown}}, ptr::Ptr{Uint8}, data)
 end
 
 function pgdata(::Type{PostgresType{:json}}, ptr::Ptr{Uint8}, data::Dict{String,Any})
+    ptr = storestring!(ptr, bytestring(JSON.json(data)))
+end
+
+function pgdata(::Type{PostgresType{:jsonb}}, ptr::Ptr{Uint8}, data::Dict{String,Any})
     ptr = storestring!(ptr, bytestring(JSON.json(data)))
 end
 

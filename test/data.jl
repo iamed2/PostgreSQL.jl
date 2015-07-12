@@ -58,15 +58,17 @@ function test_bytea()
 end
 
 function test_json()
-    typ = PostgreSQL.PostgresType{:json}
-    dict1 = Dict{String,Any}({"bobr dobr" => [1, 2, 3]})
-    p = PostgreSQL.pgdata(typ, convert(Ptr{Uint8}, C_NULL), dict1)
-    try
-        dict2 = PostgreSQL.jldata(typ, p)
-        @test typeof(dict1) == typeof(dict2)
-        @test dict1 == dict2
-    finally
-        c_free(p)
+    PGType = PostgreSQL.PostgresType
+    for typ in {PGType{:json}, PGType{:jsonb}}
+        dict1 = Dict{String,Any}({"bobr dobr" => [1, 2, 3]})
+        p = PostgreSQL.pgdata(typ, convert(Ptr{Uint8}, C_NULL), dict1)
+        try
+            dict2 = PostgreSQL.jldata(typ, p)
+            @test typeof(dict1) == typeof(dict2)
+            @test dict1 == dict2
+        finally
+            c_free(p)
+        end
     end
 end
 
